@@ -1,3 +1,4 @@
 /target
-src/secrets.rs
 /output/
+.scripts/
+.scripts/*

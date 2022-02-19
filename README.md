@@ -1,12 +1,13 @@
 # Image Scraper
 
 Mass download image files from imgur.
+Since scraping the webpage yields only low quality thumbnails instead use imgur API to retrieve bulk posts.
 
 ## Options
 
 ### Gallery
 
-This is the most fleshed out option at this point. It uses the imgur api and therefore requires an imgur client id as an argument. 
+This is the most fleshed out option at this point.
 
 ### Random
 
@@ -19,7 +20,3 @@ Download images from a particular subreddit
 ### Search
 
 Make a query and download the results
-
-### Viral
-
-Scrape and download the front page

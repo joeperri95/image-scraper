@@ -1,52 +1,33 @@
 use rand::prelude::*;
-use tokio::fs;
 use std::{thread, time};
-use serde_json::{Value};
-use serde::Deserialize;
-use serde::Serialize;
+use scraper::{Html, Selector};
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ImagePost 
+use crate::models;
+
+pub async fn get_gallery_image_urls(posts: models::image_post::ImagePosts) -> Vec<String>
 {
-    pub id: Value,
-    pub title: Value,
-    pub description: Option<Value>,
-    pub datetime:Value,
+    
+    let mut list = Vec::new();
+        
+    for i in posts.data 
+      {
+        println!("{:?}", i);
+          if i.is_album == false {
+              let mut link = format!("{}", i.link).replace(r#"""#,"");
 
-    pub file_type: Option<Value>,
-    pub width: Option<Value>,
-    pub height: Option<Value>,
-    pub size: Option<Value>,
-    pub views: Option<Value>,
-    pub bandwidth: Option<Value>,
-    pub vote: Option<Value>,
-    pub favorite: Option<Value>,
-    pub nsfw: Option<Value>,
-    pub section: Option<Value>,
-    pub account_url: Option<Value>,
-    pub account_id: Option<Value>,
-    pub is_ad: Option<Value>,
-    pub tags: Option<Value>,
-    pub in_most_viral: Option<Value>,
-    pub in_gallery: Option<Value>,
-    pub link: Value,
-    pub comment_count: Option<Value>,
-    pub ups: Option<Value>,
-    pub downs: Option<Value>,
-    pub points: Option<Value>,
-    pub score: Option<Value>,
-    pub is_album: Value,
+              // imgur transcodes gifs to mp4 and a jpeg
+              // they create a jpeg with a trailing h
+              
+              link = format!("{}", link).replace("h.gif",".mp4");
+              list.push(link);
+          }
+      }
+
+      list
 }
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ApiResponse
-{
-    pub data: Vec<ImagePost>,
-}
-
 
 // Construct a url for a random imgur image
-pub fn get_random_imgur_url() -> String
+fn generate_imgur_url() -> String
 {
 
      let chars = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'];
@@ -60,29 +41,61 @@ pub fn get_random_imgur_url() -> String
 
      // More jpg hits than png
      // Most png files get transcoded to jpeg anyway
+     // Need to save file with the right extension
 
      url += ".jpg";
      url
 }
 
-// download a random imgur file  
-pub async fn download_random_imgur_file(filename: &str) -> Result<(), Box<dyn std::error::Error>>
+// Construct a url for a random imgur image
+pub async fn get_random_imgur_url() -> Result<String, Box<dyn std::error::Error>>
 {
-    let mut url = get_random_imgur_url(); 
-    let mut req = reqwest::get(url).await?;
 
-    // bad links will redirect to removed.png
-    println!("{} {} {}", filename, req.status(), req.url().path());
+    let mut url = generate_imgur_url();
+    let mut req = reqwest::get(url.clone()).await?;
+
     while req.url().path() == "/removed.png" || req.status().is_client_error()
     {
-        url = get_random_imgur_url(); 
-        req = reqwest::get(url).await?;
+        url = generate_imgur_url(); 
+        req = reqwest::get(url.clone()).await?;
 
         // sleep for a bit to be nice to imgur
         thread::sleep(time::Duration::from_millis(10));
     }
 
-    fs::write(filename, req.bytes().await?).await?;
-    Ok(())
+     Ok(url)
 }
 
+// scrape image links from an imgur gallery
+pub async fn scrape(url: &str) -> Vec<String> {
+    let response = reqwest::get(url).await.unwrap();
+    let document = Html::parse_document(&response.text().await.unwrap());
+    let selector = Selector::parse("img").unwrap();
+    let video_selector = Selector::parse("source").unwrap();
+    let mut urllist = Vec::new();
+
+    // Collect image links from the webpage
+    for i in document.select(&selector)
+    {
+        if let Some(tag) = i.value().attr("src")
+        {
+            urllist.push(String::from("https:") + tag);
+        }
+    }
+
+    // Get videos from webpage
+    for i in document.select(&video_selector)
+    {
+        if let Some(source_type) = i.value().attr("type")
+        {
+            if source_type == "video/mp4" {  
+                if let Some(tag) = i.value().attr("src")
+                {
+                    urllist.push(String::from(tag));
+                }
+            }
+        }
+    }
+
+    urllist
+}
