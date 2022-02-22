@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{fmt};
 
 // The gallery section to select
 // Hot is an algorithmically determined gallery of recently popular images 
@@ -13,20 +13,20 @@ pub enum Section
     User,
 }
 
-impl From<&str> for Section
+impl Section
 {
-    fn from(s: &str) -> Self
+    pub fn from(s: &str) -> Result<Self, String>
     {
          let mut target = String::from(s);
           target.make_ascii_lowercase();
             
           match target.as_str() {
-           "hot" => {Section::Hot}
-           "top" => {Section::Top}
-           "user" => {Section::User}
+           "hot" => {Ok(Section::Hot)}
+           "top" => {Ok(Section::Top)}
+           "user" => {Ok(Section::User)}
             _ => {
             // deafult value
-             Section::Hot 
+                Err("Valid section options are <hot|top|user>".to_string())
             }
           }
     }
@@ -56,21 +56,20 @@ pub enum Sort
     Rising,
 }
 
-impl From<&str> for Sort
+impl Sort
 {
-    fn from(s: &str) -> Self
+    pub fn from(s: &str) -> Result<Self, String>
     {
        let mut target = String::from(s); 
        target.make_ascii_lowercase();
        match target.as_str()
        {
-            "viral" => {Sort::Viral}
-            "top" => { Sort::Top }
-            "time" => {Sort::Time}
-            "rising" => { Sort::Rising }
+            "viral" => {Ok(Sort::Viral)}
+            "top" => { Ok(Sort::Top)}
+            "time" => {Ok(Sort::Time)}
+            "rising" => { Ok(Sort::Rising) }
             _ => {
-               // default value
-               Sort::Viral
+               Err("Valid sort options are <viral|top|time|rising>".to_string())
             }
        }
     }
@@ -102,19 +101,19 @@ pub enum Window
     All,
 }
 
-impl From<&str> for Window
+impl Window
 {
-    fn from(s: &str) -> Self
+    pub fn from(s: &str) -> Result<Self,String>
     {
         let mut target = String::from(s);
         target.make_ascii_lowercase();
         match target.as_str() {
-            "day" => {Window::Day},
-            "week" => {Window::Week},
-            "month" => {Window::Month},
-            "year" => {Window::Year},
-            "all" => {Window::All},
-            _ => {Window::Day},
+            "day" => {Ok(Window::Day)},
+            "week" => {Ok(Window::Week)},
+            "month" => {Ok(Window::Month)},
+            "year" => {Ok(Window::Year)},
+            "all" => {Ok(Window::All)},
+            _ => {Err("Valid window options are <day|week|month|year|all>".to_string())},
         }
     }
 }

@@ -10,6 +10,29 @@ pub async fn spawn_downloader(url: String, filename: String) -> JoinHandle<()> {
     })
 }
 
+// take a  url and spawwn a task to download it
+pub async fn download_file(url: &str, dir: &str) {
+    
+    let task: JoinHandle<()>;
+    
+    // extract the actual resource from the url
+    let stem = url.split('/').last().unwrap();           
+
+    let mut path = PathBuf::new(); 
+    path.push(dir);
+    
+    if !path.is_dir() {
+        fs::create_dir(&path).await.unwrap();
+    }
+
+    path.push(stem);
+
+    // await the task creation not its conclusion
+    println!("{}", path.as_path().display());
+    task = spawn_downloader(String::from(url), path.as_path().display().to_string()).await;
+    task.await.unwrap();
+}
+
 // take a list of urls and spawwn tasks to download each of them
 pub async fn download_files(urls: Vec<String>, dir: &str) {
     let mut tasks: Vec<JoinHandle<()>> = Vec::new();

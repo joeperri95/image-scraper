@@ -1,50 +1,36 @@
 use rand::prelude::*;
 use std::{thread, time};
-use scraper::{Html, Selector};
+use reqwest::Error;
 
 use crate::models;
 
-pub async fn get_gallery_image_urls(posts: models::image_post::ImagePosts) -> Vec<String>
+fn generate_random_hash(iterations: usize) -> String
 {
-    
-    let mut list = Vec::new();
-        
-    for i in posts.data 
-      {
-        println!("{:?}", i);
-          if i.is_album == false {
-              let mut link = format!("{}", i.link).replace(r#"""#,"");
 
-              // imgur transcodes gifs to mp4 and a jpeg
-              // they create a jpeg with a trailing h
-              
-              link = format!("{}", link).replace("h.gif",".mp4");
-              list.push(link);
-          }
-      }
+    let chars = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+    let mut hash = String::new();
+    let mut rng = thread_rng();
 
-      list
+    for _i in 0..iterations
+    {
+        hash += &chars.get(rng.gen_range(0..chars.len())).unwrap().to_string();
+    }
+
+    hash
 }
 
 // Construct a url for a random imgur image
 fn generate_imgur_url() -> String
 {
-
-     let chars = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'];
-     let mut url = "https://imgur.com/".to_string();
-     let mut rng = thread_rng();
- 
-     for _i in 0..5
-     {
-         url += &chars.get(rng.gen_range(0..chars.len())).unwrap().to_string();
-     }
+    let mut url = "https://imgur.com/".to_string();
 
      // More jpg hits than png
      // Most png files get transcoded to jpeg anyway
      // Need to save file with the right extension
 
-     url += ".jpg";
-     url
+    url += &generate_random_hash(5);
+    url += ".jpg";
+    url
 }
 
 // Construct a url for a random imgur image
@@ -66,36 +52,75 @@ pub async fn get_random_imgur_url() -> Result<String, Box<dyn std::error::Error>
      Ok(url)
 }
 
-// scrape image links from an imgur gallery
-pub async fn scrape(url: &str) -> Vec<String> {
-    let response = reqwest::get(url).await.unwrap();
-    let document = Html::parse_document(&response.text().await.unwrap());
-    let selector = Selector::parse("img").unwrap();
-    let video_selector = Selector::parse("source").unwrap();
-    let mut urllist = Vec::new();
+pub struct ImgurClient {
+    client_id: String,
+}
 
-    // Collect image links from the webpage
-    for i in document.select(&selector)
+impl ImgurClient
+{
+    pub fn new(client_id : &str) -> ImgurClient
     {
-        if let Some(tag) = i.value().attr("src")
+        ImgurClient
         {
-            urllist.push(String::from("https:") + tag);
-        }
+            client_id : client_id.to_string()
+        }       
     }
 
-    // Get videos from webpage
-    for i in document.select(&video_selector)
+    pub async fn gallery_request(&mut self, url: &str) -> Result<models::image_post::ImagePosts, Error>
     {
-        if let Some(source_type) = i.value().attr("type")
+        let client = reqwest::Client::new();
+        let mut req = client.request(reqwest::Method::GET, url);
+        req = req.header(reqwest::header::AUTHORIZATION, format!("Client-ID {}", self.client_id));
+        let response: models::image_post::ImagePosts = req.send().await?.json().await?;   
+        Ok(response)
+    }
+
+    pub async fn album_request(&mut self, url: &str) -> Result<models::album::AlbumResponse, Error>
+    {
+        let client = reqwest::Client::new();
+        let mut req = client.request(reqwest::Method::GET, url);
+        req = req.header(reqwest::header::AUTHORIZATION, format!("Client-ID {}", self.client_id));
+        let response: models::album::AlbumResponse = req.send().await?.json().await?;   
+        
+        Ok(response)
+    }
+
+    pub async fn get_gallery_image_urls(&mut self, posts: models::image_post::ImagePosts) -> Vec<String>
+    {
+        let mut list = Vec::new();
+            
+        for i in posts.data 
         {
-            if source_type == "video/mp4" {  
-                if let Some(tag) = i.value().attr("src")
-                {
-                    urllist.push(String::from(tag));
+            println!("{:?}", i);
+            if i.is_album == false {
+                let mut link = i.link.to_string().replace(r#"""#,"");
+
+                // imgur transcodes gifs to mp4 and a jpeg
+                // they create a jpeg with a trailing h
+                
+                link = link.to_string().replace("h.gif",".mp4");
+                list.push(link);
+            }
+            else {
+                         
+                let id = format!("{}", i.id).replace(r#"""#,"");
+                
+                let album_url =  format!("https://api.imgur.com/3/album/{}", id);
+                let resp = self.album_request(&album_url).await.unwrap();
+                println!("{:?}", resp.data.images);
+                for j in &resp.data.images
+                {   
+                    let mut image_link = format!("{}", j.link).replace(r#"""#,"");
+
+                // imgur transcodes gifs to mp4 and a jpeg
+                // they create a jpeg with a trailing h
+                    
+                    image_link = image_link.to_string().replace("h.gif",".mp4");
+                    list.push(image_link);
                 }
             }
         }
-    }
 
-    urllist
+      list
+    }
 }

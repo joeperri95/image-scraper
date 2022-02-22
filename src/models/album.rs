@@ -1,32 +1,40 @@
-use rand::prelude::*;
-use std::{thread, time};
 use serde_json::{Value};
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Debug, Serialize, Deserialize)]
-struct Album
-{
-    pub id: String,
-    pub title: String,
-    pub description: String,
-    pub datetime: i64,
-    pub cover: String,
-    pub cover_width: i64,
-    pub cover_height: i64,
-    pub account_url: String,
-    pub account_id: String,
-    pub privacy: String,
-    pub layout: String,
-    pub views: i64,
-    pub link: String,
-    pub favorite: bool,
-    pub nsfw: bool,
-    pub section: String,
-    pub order: i64,
-    pub deletehash: Option<String>,
-    pub image_count: i64,
-    pub images: Vec<Image>,
-    pub in_gallery: bool,
+use super::image::Image;
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Album
+{
+    pub id: Value,
+    pub title: Value,
+    pub description: Value,
+    pub datetime: Option<Value>,
+    pub cover: Option<Value>,
+    pub cover_width: Option<Value>,
+    pub cover_height: Option<Value>,
+    pub account_url: Option<Value>,
+    pub account_id: Option<Value>,
+    pub privacy: Option<Value>,
+    pub layout: Option<Value>,
+    pub views: Option<Value>,
+    pub link: Option<Value>,
+    pub favorite: Option<Value>,
+    pub nsfw: Option<Value>,
+    pub section: Option<Value>,
+    pub order: Option<Value>,
+    pub deletehash: Option<Value>,
+    pub image_count: Option<Value>,
+    pub images: Vec<Image>,
+    pub in_gallery: Option<Value>,
+
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AlbumResponse
+{
+    pub data: Album,
+    pub success: bool,
+    pub status: usize,
 }

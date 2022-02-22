@@ -50,7 +50,7 @@ pub fn build_url(target: UrlTarget) -> String
             final_url
         }
         UrlTarget::Gallery {url} => {
-            let mut final_url = format!("https://api.imgur.com/3/gallery");
+            let mut final_url = "https://api.imgur.com/3/gallery".to_string();
             let mut query_prefix = '?';
 
             if let Some(section) = url.section {final_url += &format!("/{}", section)};
@@ -72,7 +72,7 @@ pub fn build_url(target: UrlTarget) -> String
             final_url
         }
         UrlTarget::Search {url} => {
-            let mut final_url = format!("https://api.imgur.com/3/gallery/search/");            
+            let mut final_url = String::from("https://api.imgur.com/3/gallery/search/");
             
             if let Some(sort) = url.sort {final_url += &format!("/{}", sort)};
             if let Some(window) = url.window {final_url += &format!("/{}", window)};
