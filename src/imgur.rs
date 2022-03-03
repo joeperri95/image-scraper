@@ -42,14 +42,27 @@ pub async fn get_random_imgur_url() -> Result<String, Box<dyn std::error::Error>
 
     while req.url().path() == "/removed.png" || req.status().is_client_error()
     {
+        
         url = generate_imgur_url(); 
         req = reqwest::get(url.clone()).await?;
-
+        
         // sleep for a bit to be nice to imgur
         thread::sleep(time::Duration::from_millis(10));
     }
 
-     Ok(url)
+    // fix extensions
+    // This should be done elsewhere but it is easiest to get it fromt the MIME type
+
+    if req.headers()["content-type"] == "image/png"
+    {
+        url = url.replace(".jpg", ".png");
+    }
+    else if req.headers()["content-type"] == "image/gif"
+    {
+        url = url.replace(".jpg", ".gif");
+    }
+    
+    Ok(url)
 }
 
 pub struct ImgurClient {
@@ -71,7 +84,7 @@ impl ImgurClient
         let client = reqwest::Client::new();
         let mut req = client.request(reqwest::Method::GET, url);
         req = req.header(reqwest::header::AUTHORIZATION, format!("Client-ID {}", self.client_id));
-        let response: models::image_post::ImagePosts = req.send().await?.json().await?;   
+        let response: models::image_post::ImagePosts = req.send().await?.json().await?;                   
         Ok(response)
     }
 

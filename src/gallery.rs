@@ -131,16 +131,3 @@ impl fmt::Display for Window
         }
     }
 }
-
-#[derive(Debug)]
-pub struct Gallery
-{
-    pub section: Section,
-    pub sort: Sort,
-    pub page: usize,
-    pub window: Window,
-    pub client_id: String,
-    pub show_viral: bool,
-    pub nsfw: bool,
-    pub album_previews: bool,
-}
