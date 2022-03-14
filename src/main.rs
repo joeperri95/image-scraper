@@ -4,14 +4,15 @@ mod imgur;
 mod gallery;
 mod download;
 mod url_builder;
+mod reddit;
 
-mod models {pub mod image_post; pub mod album; pub mod image;}
+mod models {pub mod image_post; pub mod album; pub mod image;pub mod listing;}
 mod cli {pub mod opt;}
 use cli::opt::Opt;
 
 #[tokio::main]
 async fn main() {
-    
+
     let opt= Opt::from_args();    
     
     match opt
@@ -30,6 +31,11 @@ async fn main() {
             
             }            
         }        
+        Opt::Reddit {subreddit} =>
+        {
+            let files = reddit::get_posts(&subreddit).await.unwrap();
+            download::download_files_named(files, &format!("output/{}", subreddit)).await;
+        }
         Opt::Gallery {client_id, sort, section, window, page, nsfw, show_viral, album_preview} => {
 
             let mut gallery_url_options = url_builder::GalleryUrl::default();

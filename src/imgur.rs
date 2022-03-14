@@ -22,7 +22,7 @@ fn generate_random_hash(iterations: usize) -> String
 // Construct a url for a random imgur image
 fn generate_imgur_url() -> String
 {
-    let mut url = "https://imgur.com/".to_string();
+    let mut url = "https://i.imgur.com/".to_string();
 
      // More jpg hits than png
      // Most png files get transcoded to jpeg anyway
@@ -39,13 +39,15 @@ pub async fn get_random_imgur_url() -> Result<String, Box<dyn std::error::Error>
 
     let mut url = generate_imgur_url();
     let mut req = reqwest::get(url.clone()).await?;
-
+    let mut count = 0;
     while req.url().path() == "/removed.png" || req.status().is_client_error()
     {
         
         url = generate_imgur_url(); 
         req = reqwest::get(url.clone()).await?;
         
+        count += 1;
+        println!("url: {} attempt: {}", url, count);
         // sleep for a bit to be nice to imgur
         thread::sleep(time::Duration::from_millis(10));
     }

@@ -7,6 +7,9 @@ pub enum Opt{
         #[structopt(short="i", long)]
         iterations: usize,
     }, 
+    Reddit {
+        subreddit: String,
+    },
     Subreddit {
         client_id: String,
 
