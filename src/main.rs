@@ -5,6 +5,12 @@ mod gallery;
 mod download;
 mod url_builder;
 mod reddit;
+mod conditioner;
+
+use std::collections::HashMap;
+
+#[macro_use]
+extern crate lazy_static;
 
 mod models {pub mod image_post; pub mod album; pub mod image;pub mod listing;}
 mod cli {pub mod opt;}
@@ -32,9 +38,30 @@ async fn main() {
             }            
         }        
         Opt::Reddit {subreddit} =>
-        {
-            let files = reddit::get_posts(&subreddit).await.unwrap();
-            download::download_files_named(files, &format!("output/{}", subreddit)).await;
+        {            
+            match reddit::get_posts(&subreddit).await
+            {
+                Ok(files) => {
+                    let mut selected_files: HashMap<String, String> = HashMap::new();
+                    for (name, url) in files
+                    {
+                        let mime_type = conditioner::get_content_type(&url).await;
+                        if conditioner::SELECTED_MIME_TYPES.contains(&mime_type)
+                        {
+                            if let Some(ext) = conditioner::get_file_extension_from_mime_type(&mime_type)
+                            {
+                                selected_files.insert(name + &ext, url);
+                            }
+                        }
+                        
+                    }
+
+                    download::download_files_named(selected_files, &format!("output/{}", subreddit)).await;
+                },
+                Err(e) => {
+                    println!("Could not get posts from subreddit {}", subreddit);
+                },
+            };
         }
         Opt::Gallery {client_id, sort, section, window, page, nsfw, show_viral, album_preview} => {
 

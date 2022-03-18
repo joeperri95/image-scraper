@@ -1,6 +1,15 @@
 use super::gallery::{Sort, Section, Window};
 
 #[derive(Default, PartialEq, Eq)]
+pub struct RedditUrl
+{
+    pub subreddit: String,
+    pub sort: Option<Sort>,
+    pub page: Option<i64>,
+    pub window: Option<Window>,
+}
+
+#[derive(Default, PartialEq, Eq)]
 pub struct SubredditUrl
 {
     pub subreddit: String,

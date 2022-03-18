@@ -710,6 +710,7 @@ version = "0.1.0"
 dependencies = [
  "enum-utils",
  "image",
+ "lazy_static",
  "png 0.17.2",
  "rand 0.8.4",
  "regex",

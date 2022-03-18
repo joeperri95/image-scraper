@@ -2,7 +2,7 @@ use rand::prelude::*;
 use std::{thread, time};
 use reqwest::Error;
 
-use crate::models;
+use crate::{models, conditioner};
 
 fn generate_random_hash(iterations: usize) -> String
 {
@@ -53,18 +53,15 @@ pub async fn get_random_imgur_url() -> Result<String, Box<dyn std::error::Error>
     }
 
     // fix extensions
-    // This should be done elsewhere but it is easiest to get it fromt the MIME type
-
-    if req.headers()["content-type"] == "image/png"
+    let mime = req.headers()["content-type"].to_str()?;
+    if let Some(ext) = conditioner::get_file_extension_from_mime_type(mime)
     {
-        url = url.replace(".jpg", ".png");
+        Ok(url + &ext)
     }
-    else if req.headers()["content-type"] == "image/gif"
-    {
-        url = url.replace(".jpg", ".gif");
+    else {
+        Err("Could not determine file extension from mime type")?
     }
     
-    Ok(url)
 }
 
 pub struct ImgurClient {
@@ -106,7 +103,6 @@ impl ImgurClient
             
         for i in posts.data 
         {
-            println!("{:?}", i);
             if i.is_album == false {
                 let mut link = i.link.to_string().replace(r#"""#,"");
 
