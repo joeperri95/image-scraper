@@ -2,7 +2,7 @@
 // Check mime types
 // Make sure file names are friendly
 
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 
 lazy_static! {
     pub static ref SELECTED_MIME_TYPES: HashSet<String> = {
@@ -35,6 +35,35 @@ pub fn get_file_extension_from_mime_type(mime: &str) -> Option<String>
         "video/mp4" => {Some(".mp4".to_string())}
         _ => {None}
     }
+}
+
+pub async fn fix_file_extension(name: &str, url: &str) -> Option<String>
+{
+    let mime_type = get_content_type(&url).await;
+    if SELECTED_MIME_TYPES.contains(&mime_type)
+    {
+        if let Some(ext) = get_file_extension_from_mime_type(&mime_type)
+        {
+            return Some(name.to_owned() + &ext);
+        }
+    } 
+
+    None
+}
+
+pub async fn fix_file_extensions(files: HashMap<String, String>) -> HashMap<String, String>
+{
+    let mut fixed_files: HashMap<String, String> = HashMap::new();
+    
+    for (name, url) in files
+    {
+        if let Some(name) = fix_file_extension(&name, &url).await
+        {
+            fixed_files.insert(name, url);
+        }
+    }
+
+    fixed_files
 }
 
 // remove quotes from string

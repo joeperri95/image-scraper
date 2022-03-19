@@ -9,7 +9,28 @@ pub enum Opt{
     }, 
     Reddit {
         subreddit: String,
+        
+        #[structopt(short="x", long)]
+        section: Option<String>,
+
+        #[structopt(short="w", long)]
+        window: Option<String>,
+
+        #[structopt(short="c", long)]
+        count: Option<usize>,
     },
+    RedditSearch {
+        term: String,
+        
+        #[structopt(short="s", long)]
+        sort: Option<String>,
+
+        #[structopt(short="w", long)]
+        window: Option<String>,
+
+        #[structopt(short="c", long)]
+        count: Option<usize>,
+    },    
     Subreddit {
         client_id: String,
 
