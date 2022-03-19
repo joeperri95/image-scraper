@@ -54,7 +54,7 @@ pub async fn get_random_imgur_url() -> Result<String, Box<dyn std::error::Error>
     }
 
     // fix extensions
-    url = url.replace(".jpg", "");
-    url = fix_file_extension(&url, &url).await.unwrap();
+    let name = url.replace(".jpg", "");
+    url = fix_file_extension(&name, &url).await.unwrap();
     Ok(url)
 }
