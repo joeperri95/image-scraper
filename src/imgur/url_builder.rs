@@ -1,4 +1,4 @@
-use super::gallery::{Sort, Section, Window};
+use crate::imgur::query_options::{Sort, Section, Window};
 
 #[derive(Default, PartialEq, Eq)]
 pub struct SubredditUrl
