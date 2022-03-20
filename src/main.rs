@@ -2,15 +2,15 @@ use structopt::StructOpt;
 
 mod download;
 mod conditioner;
+mod cli;
 
 #[macro_use]
 extern crate lazy_static;
 
 mod imgur {pub mod imgur; pub mod query_options; pub mod random; pub mod url_builder; mod models {pub mod image_post; pub mod album; pub mod image;}}
 mod reddit {pub mod reddit; pub mod query_options; pub mod url_builder; mod models{pub mod listing;}}
-mod cli {pub mod opt;}
 
-use cli::opt::Opt;
+use cli::Opt;
 
 #[tokio::main]
 async fn main() {
@@ -31,7 +31,7 @@ async fn main() {
                 println!("{} of {} complete", total, iterations);            
             }            
         }        
-        Opt::Reddit {subreddit, section, window, count} =>
+        Opt::Subreddit {subreddit, section, window, count} =>
         {            
             let mut gallery_url_options = reddit::url_builder::SubredditUrl 
             {
@@ -115,7 +115,7 @@ async fn main() {
             download::download_files(urllist, "output").await; 
 
         }
-        Opt::Subreddit {client_id, subreddit, sort, window, page} => {
+        Opt::SubredditGallery {client_id, subreddit, sort, window, page} => {
 
             let mut subreddit_url_options = imgur::url_builder::SubredditUrl
             {
@@ -136,7 +136,7 @@ async fn main() {
             download::download_files(urllist, &format!("output/{}", subreddit)).await; 
 
         }
-        Opt::Search {client_id, term, sort, window, page} => {
+        Opt::ImgurSearch {client_id, term, sort, window, page} => {
             let mut search_url_option = imgur::url_builder::SearchUrl{
                 term: Some(term.clone()),
                 sort: None,

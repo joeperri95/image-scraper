@@ -7,7 +7,7 @@ pub enum Opt{
         #[structopt(short="i", long)]
         iterations: usize,
     }, 
-    Reddit {
+    Subreddit {
         subreddit: String,
         
         #[structopt(short="x", long)]
@@ -31,7 +31,7 @@ pub enum Opt{
         #[structopt(short="c", long)]
         count: Option<usize>,
     },    
-    Subreddit {
+    SubredditGallery {
         client_id: String,
 
         subreddit: String,
@@ -45,7 +45,7 @@ pub enum Opt{
         #[structopt(short="p", long)]
         page: Option<usize>,
     },
-    Search {
+    ImgurSearch {
         client_id: String,
 
         term: String,
