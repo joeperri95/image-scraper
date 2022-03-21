@@ -42,7 +42,7 @@ impl ImgurClient
         for i in posts.data 
         {            
             if i.is_album == false {
-                let mut link = i.link.to_string().replace(r#"""#,"");
+                let mut link = i.link.to_string().replace('"',"");
 
                 // imgur transcodes gifs to mp4 and a jpeg
                 // they create a jpeg with a trailing h
@@ -52,20 +52,22 @@ impl ImgurClient
             }
             else {
                          
-                let id = format!("{}", i.id).replace(r#"""#,"");
+                let id = format!("{}", i.id).replace('"',"");
                 
                 let album_url =  format!("https://api.imgur.com/3/album/{}", id);
-                let resp = self.album_request(&album_url).await.unwrap();
-
-                for j in &resp.data.images
-                {   
-                    let mut image_link = format!("{}", j.link).replace(r#"""#,"");
-
-                // imgur transcodes gifs to mp4 and a jpeg
-                // they create a jpeg with a trailing h
-                    
-                    image_link = image_link.to_string().replace("h.gif",".mp4");
-                    list.push(image_link);
+                let resp = self.album_request(&album_url).await;
+                
+                if let Ok(album) = resp{
+                    for j in album.data.images
+                    {   
+                        let mut image_link = format!("{}", j.link).replace('"',"");
+        
+                        // imgur transcodes gifs to mp4 and a jpeg
+                        // they create a jpeg with a trailing h
+                            
+                        image_link = image_link.to_string().replace("h.gif",".mp4");
+                        list.push(image_link);
+                    }
                 }
             }
         }

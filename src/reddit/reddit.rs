@@ -28,25 +28,36 @@ impl RedditClient
 
         for post in listing.data.children
         {            
+            let link;
+
+            let title = match &post.data.title
+            {
+                Some (t) => {conditioner::condition_filename(&t.to_string())}
+                None => {
+                    continue;
+                }
+            };
+            
+            // If there is a reddit preview we will likely want that over a link to some external site
+
             if let Some(preview) = post.data.preview.clone()
             {
                 if let Some(vid) = preview.reddit_video_preview.clone()
-                {
-                    let title = conditioner::condition_filename(&post.data.title.unwrap().to_string());
-                    let link = conditioner::trim_quotation_marks(&vid.fallback_url.clone().unwrap().to_string());
-                    files_to_download.insert(title, link);            
-                }
-                else {
-                    let title = conditioner::condition_filename(&post.data.title.unwrap().to_string());
-                    let link = conditioner::trim_quotation_marks(&post.data.url.clone().unwrap().to_string());
-                    files_to_download.insert(title, link);            
+                { 
+                    if let Some(v) = vid.fallback_url.clone()
+                    {
+                        link = conditioner::trim_quotation_marks(&v.to_string());
+                        files_to_download.insert(title, link);
+                    }
+                    continue;
                 }
             }
-            else {
-                let title = conditioner::condition_filename(&post.data.title.unwrap().to_string());
-                let link = conditioner::trim_quotation_marks(&post.data.url.clone().unwrap().to_string());
-                files_to_download.insert(title, link);            
-            }        
+ 
+            if let Some(v) = post.data.url.clone()
+            {
+                link = conditioner::trim_quotation_marks(&v.to_string());
+                files_to_download.insert(title, link);
+            }
         }
         
         Ok(files_to_download)

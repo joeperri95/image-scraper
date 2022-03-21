@@ -16,16 +16,17 @@ lazy_static! {
 }
 
 // Return the results of a head request 
-pub async fn get_content_type(url: &str) -> String {
+pub async fn get_content_type(url: &str) -> Result<String, Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
     let req = client.head(url);
     let resp = req.send().await.expect("Request for url failed");
 
-    let mime_type = String::from(resp.headers()["content-type"].to_str().unwrap());
+    let mime_type = String::from(resp.headers()["content-type"].to_str()?);
 
-    mime_type
+    Ok(mime_type)
 }
 
+// Return the appropriate file extension
 pub fn get_file_extension_from_mime_type(mime: &str) -> Option<String>
 {
     match mime {
@@ -37,27 +38,30 @@ pub fn get_file_extension_from_mime_type(mime: &str) -> Option<String>
     }
 }
 
-pub async fn fix_file_extension(name: &str, url: &str) -> Option<String>
+// Append a file extension to name based on the mime type of url
+pub async fn fix_file_extension(name: &str, url: &str) -> Result<String, Box<dyn std::error::Error>>
 {
-    let mime_type = get_content_type(&url).await;
+    let mime_type = get_content_type(url).await?;
     if SELECTED_MIME_TYPES.contains(&mime_type)
     {
         if let Some(ext) = get_file_extension_from_mime_type(&mime_type)
         {
-            return Some(name.to_owned() + &ext);
+            return Ok(name.to_owned() + &ext);
         }
     } 
 
-    None
+    Err("Could not determine extension from mime type".to_string().into())
 }
 
+// Take a map of (filename, url) and return a new map that gives filename 
+// a new extension based on the mime type of url 
 pub async fn fix_file_extensions(files: HashMap<String, String>) -> HashMap<String, String>
 {
     let mut fixed_files: HashMap<String, String> = HashMap::new();
     
     for (name, url) in files
     {
-        if let Some(name) = fix_file_extension(&name, &url).await
+        if let Ok(name) = fix_file_extension(&name, &url).await
         {
             fixed_files.insert(name, url);
         }
@@ -69,7 +73,7 @@ pub async fn fix_file_extensions(files: HashMap<String, String>) -> HashMap<Stri
 // remove quotes from string
 pub fn trim_quotation_marks(link: &str) -> String
 {
-    link.to_string().replace(r#"""#,"")
+    link.to_string().replace('"',"")
 }
 
 // convert a string friendly filename
