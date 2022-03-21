@@ -1,4 +1,4 @@
-# Media Scraper
+# Media Scraper v0.1.0
 
 Mass download images, gifs and mp4 files from imgur and reddit.
 
